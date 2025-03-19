@@ -8,10 +8,10 @@ import (
 )
 
 type Params struct {
-	user     model.User
-	id       uint32
-	name     string
-	password string
+	User     model.User
+	Id       uint32
+	Name     string
+	Password string
 }
 
 type CRUD struct {
@@ -21,20 +21,35 @@ type CRUD struct {
 	GetByNamePassword model.User
 }
 
-func UserRepository(withParameter *Params) *CRUD {
+var db *sql.DB
+
+func init() {
 	var connect config.Config
+	db = connect.DB()
+	if err := db.Ping(); err != nil {
+		panic(err)
+	}
+}
+
+func User(withParameter *Params) *CRUD {
 
 	return &CRUD{
-		Create:            create(withParameter.user, connect.DB()),
-		List:              list(connect.DB()),
-		Get:               get(connect.DB(), withParameter.id),
-		GetByNamePassword: getByNamePassword(connect.DB(), withParameter.name, withParameter.password),
+		Create:            create(withParameter.User),
+		List:              list(),
+		Get:               get(withParameter.Id),
+		GetByNamePassword: getByNamePassword(withParameter.Name, withParameter.Password),
 	}
 
 }
 
-func create(user model.User, db *sql.DB) model.User {
-	defer db.Close()
+func Close() {
+	err := db.Close()
+	if err != nil {
+		fmt.Println("Failed to close DB : ", err.Error())
+	}
+}
+
+func create(user model.User) model.User {
 	err := db.QueryRow("INSERT INTO mst_user (username, password, role) VALUES  ($1, $2, $3) RETURNING id",
 		user.Name, user.Password, user.Role,
 	).Scan(&user.Id)
@@ -45,8 +60,7 @@ func create(user model.User, db *sql.DB) model.User {
 	return user
 }
 
-func list(db *sql.DB) []model.User {
-	defer db.Close()
+func list() []model.User {
 	var users []model.User
 	rows, err := db.Query("SELECT id, username, role FROM mst_user")
 	if err != nil {
@@ -65,8 +79,7 @@ func list(db *sql.DB) []model.User {
 	return users
 }
 
-func get(db *sql.DB, id uint32) model.User {
-	defer db.Close()
+func get(id uint32) model.User {
 	var user model.User
 	err := db.QueryRow("SELECT id, username, role FROM mst_user WHERE id = $1", id).Scan(&user.Id, &user.Name, &user.Role)
 	if err != nil {
@@ -76,8 +89,7 @@ func get(db *sql.DB, id uint32) model.User {
 	return user
 }
 
-func getByNamePassword(db *sql.DB, name string, password string) model.User {
-	defer db.Close()
+func getByNamePassword(name string, password string) model.User {
 	var user model.User
 	err := db.QueryRow("SELECT id, username, role FROM mst_user WHERE username = $1 and password = $2", name, password).Scan(&user.Id, &user.Name, &user.Role)
 	if err != nil {
