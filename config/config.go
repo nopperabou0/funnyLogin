@@ -1,7 +1,10 @@
 package config
 
 import (
+	"database/sql"
 	"fmt"
+
+	_ "github.com/lib/pq"
 )
 
 type dbconfig struct {
@@ -22,7 +25,7 @@ type Config struct {
 	apiconfig
 }
 
-func (c *Config) DB() string {
+func (c *Config) DB() *sql.DB {
 	if c.dbconfig == (dbconfig{}) {
 		c.dbconfig = dbconfig{
 			host:     "localhost",
@@ -40,7 +43,13 @@ func (c *Config) DB() string {
 		c.password,
 		c.database)
 
-	return dbConf
+	db, err := sql.Open(c.driver, dbConf)
+
+	if err != nil {
+		panic(fmt.Sprintln("Connection Error : ", err.Error()))
+	}
+
+	return db
 }
 
 func (c *Config) API() string {
