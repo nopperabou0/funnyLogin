@@ -6,7 +6,17 @@ import (
 	"funny-login/model"
 )
 
+type Request string
+
+const (
+	CreateUser            Request = "CreateUser"
+	ListAllUsers          Request = "ListAllUsers"
+	GetUserById           Request = "GetUserById"
+	GetUserByNamePassword Request = "GetUserByNamePassword"
+)
+
 type Params struct {
+	Req      Request
 	DB       *sql.DB
 	User     model.User
 	Id       uint32
@@ -22,17 +32,21 @@ type CRUD struct {
 }
 
 func User(withParameter *Params) *CRUD {
-
-	return &CRUD{
-		Create:            create(withParameter.DB, withParameter.User),
-		List:              list(withParameter.DB),
-		Get:               get(withParameter.DB, withParameter.Id),
-		GetByNamePassword: getByNamePassword(withParameter.DB, withParameter.Name, withParameter.Password),
+	var crud = CRUD{}
+	switch withParameter.Req {
+	case CreateUser:
+		crud.Create = create(withParameter.DB, withParameter.User)
+	case ListAllUsers:
+		crud.List = list(withParameter.DB)
+	case GetUserById:
+		crud.Get = get(withParameter.DB, withParameter.Id)
+	case GetUserByNamePassword:
+		crud.GetByNamePassword = getByNamePassword(withParameter.DB, withParameter.Name, withParameter.Password)
 	}
-
+	return &crud
 }
 
-func Close(db *sql.DB) {
+func CloseDB(db *sql.DB) {
 	err := db.Close()
 	if err != nil {
 		fmt.Println("Failed to close DB : ", err.Error())
