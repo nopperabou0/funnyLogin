@@ -9,10 +9,10 @@ import (
 type Request string
 
 const (
-	CreateUser            Request = "CreateUser"
-	ListAllUsers          Request = "ListAllUsers"
-	GetUserById           Request = "GetUserById"
-	GetUserByNamePassword Request = "GetUserByNamePassword"
+	CreateRequest            Request = "CreateUser"
+	ListRequest              Request = "ListAllUsers"
+	GetRequest               Request = "GetUserById"
+	GetByNamePasswordRequest Request = "GetUserByNamePassword"
 )
 
 type Params struct {
@@ -34,13 +34,13 @@ type CRUD struct {
 func User(withParameter *Params) *CRUD {
 	var crud = CRUD{}
 	switch withParameter.Req {
-	case CreateUser:
+	case CreateRequest:
 		crud.Create = create(withParameter.DB, withParameter.User)
-	case ListAllUsers:
+	case ListRequest:
 		crud.List = list(withParameter.DB)
-	case GetUserById:
+	case GetRequest:
 		crud.Get = get(withParameter.DB, withParameter.Id)
-	case GetUserByNamePassword:
+	case GetByNamePasswordRequest:
 		crud.GetByNamePassword = getByNamePassword(withParameter.DB, withParameter.Name, withParameter.Password)
 	}
 	return &crud
