@@ -30,7 +30,7 @@ func (c *Config) DB() *sql.DB {
 		c.dbconfig = dbconfig{
 			host:     "localhost",
 			port:     "5432",
-			database: "funnylogin",
+			database: "enigma_laundry",
 			username: "postgres",
 			password: "1234",
 			driver:   "postgres",
