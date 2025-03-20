@@ -1,6 +1,9 @@
 package usecase
 
-import jwtservice "funny-login/utils/jwt_service"
+import (
+	"fmt"
+	jwtservice "funny-login/utils/jwt_service"
+)
 
 func Login(name string, password string) (string, error) {
 	user, err := GetUserByNamePassword(name, password)
@@ -11,7 +14,7 @@ func Login(name string, password string) (string, error) {
 
 	token, err = jwtservice.CreateToken(user)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed creating token : " + err.Error())
 	}
 	return token, nil
 }

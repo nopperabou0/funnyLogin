@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"funny-login/middleware"
 	"funny-login/model"
 	"funny-login/usecase"
+	role "funny-login/utils/role"
 	"net/http"
 	"strconv"
 
@@ -54,8 +56,8 @@ func (u *User) getUserById(c *gin.Context) {
 
 func (u *User) Route() {
 
-	u.RG.POST("/users", u.createUser)
-	u.RG.GET("/users", u.getAllUser)
-	u.RG.GET("/users/:id", u.getUserById)
+	u.RG.POST("/users", middleware.RequireToken(role.Admin), u.createUser)
+	u.RG.GET("/users", middleware.RequireToken(role.Admin), u.getAllUser)
+	u.RG.GET("/users/:id", middleware.RequireToken(role.Admin), u.getUserById)
 
 }
