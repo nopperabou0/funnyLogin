@@ -25,7 +25,7 @@ type Config struct {
 	apiconfig
 }
 
-func (c *Config) DB() *sql.DB {
+func (c *Config) DB() (*sql.DB, error) {
 	if c.dbconfig == (dbconfig{}) {
 		c.dbconfig = dbconfig{
 			host:     "localhost",
@@ -46,10 +46,10 @@ func (c *Config) DB() *sql.DB {
 	db, err := sql.Open(c.driver, dbConf)
 
 	if err != nil {
-		panic(fmt.Sprintln("Connection Error : ", err.Error()))
+		return nil, err
 	}
 
-	return db
+	return db, nil
 }
 
 func (c *Config) API() string {

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"database/sql"
 	"funny-login/model"
 	"funny-login/usecase"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 )
 
 type User struct {
-	DB *sql.DB
 	RG *gin.RouterGroup
 }
 
@@ -19,16 +17,24 @@ func (u *User) createUser(c *gin.Context) {
 	var payload model.User
 	err := c.ShouldBindJSON(&payload)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"err": "failed to get parameter : " + err.Error()})
 		return
 	}
 
-	user := usecase.CreateUser(u.DB, payload)
+	user, err := usecase.CreateUser(payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "failed to create user : " + err.Error()})
+		return
+	}
 	c.JSON(http.StatusCreated, user)
 }
 
 func (u *User) getAllUser(c *gin.Context) {
-	users := usecase.ListAllUsers(u.DB)
+	users, err := usecase.ListAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "failed to list all users : " + err.Error()})
+		return
+	}
 	if len(users) > 0 {
 		c.JSON(http.StatusOK, users)
 		return
@@ -38,7 +44,11 @@ func (u *User) getAllUser(c *gin.Context) {
 
 func (u *User) getUserById(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	user := usecase.GetUserById(uint32(id), u.DB)
+	user, err := usecase.GetUserById(uint32(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "failed to get user by id : " + err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, user)
 }
 

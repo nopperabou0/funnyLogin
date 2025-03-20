@@ -1,47 +1,42 @@
 package usecase
 
 import (
-	"database/sql"
 	"funny-login/model"
 	"funny-login/repository"
 )
 
-func CreateUser(db *sql.DB, user model.User) model.User {
+func CreateUser(user model.User) (model.User, error) {
 	params := &repository.Params{
 		Req:  repository.CreateRequest,
-		DB:   db,
 		User: user,
 	}
-	result := repository.User(params)
-	return result.Create
+	result, err := repository.User(params)
+	return result.Create, err
 }
 
-func ListAllUsers(db *sql.DB) []model.User {
+func ListAllUsers() ([]model.User, error) {
 	params := &repository.Params{
 		Req: repository.ListRequest,
-		DB:  db,
 	}
-	result := repository.User(params)
-	return result.List
+	result, err := repository.User(params)
+	return result.List, err
 }
 
-func GetUserById(id uint32, db *sql.DB) model.User {
+func GetUserById(id uint32) (model.User, error) {
 	params := &repository.Params{
 		Req: repository.GetRequest,
-		DB:  db,
 		Id:  id,
 	}
-	result := repository.User(params)
-	return result.Get
+	result, err := repository.User(params)
+	return result.Get, err
 }
 
-func GetUserByNamePassword(name string, password string, db *sql.DB) model.User {
+func GetUserByNamePassword(name string, password string) (model.User, error) {
 	params := &repository.Params{
 		Req:      repository.GetByNamePasswordRequest,
-		DB:       db,
 		Name:     name,
 		Password: password,
 	}
-	result := repository.User(params)
-	return result.GetByNamePassword
+	result, err := repository.User(params)
+	return result.GetByNamePassword, err
 }

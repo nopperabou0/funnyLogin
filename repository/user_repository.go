@@ -17,7 +17,6 @@ const (
 
 type Params struct {
 	Req      Request
-	DB       *sql.DB
 	User     model.User
 	Id       uint32
 	Name     string
@@ -31,74 +30,72 @@ type CRUD struct {
 	GetByNamePassword model.User
 }
 
-func User(withParameter *Params) *CRUD {
+func User(withParameter *Params) (*CRUD, error) {
 	var crud = CRUD{}
+	var err error
 	switch withParameter.Req {
 	case CreateRequest:
-		crud.Create = create(withParameter.DB, withParameter.User)
+		crud.Create, err = create(withParameter.User)
 	case ListRequest:
-		crud.List = list(withParameter.DB)
+		crud.List, err = list()
 	case GetRequest:
-		crud.Get = get(withParameter.DB, withParameter.Id)
+		crud.Get, err = get(withParameter.Id)
 	case GetByNamePasswordRequest:
-		crud.GetByNamePassword = getByNamePassword(withParameter.DB, withParameter.Name, withParameter.Password)
+		crud.GetByNamePassword, err = getByNamePassword(withParameter.Name, withParameter.Password)
 	}
-	return &crud
+	return &crud, err
 }
 
-func CloseDB(db *sql.DB) {
-	err := db.Close()
+var DB *sql.DB
+
+func CloseDB() {
+	err := DB.Close()
 	if err != nil {
 		fmt.Println("Failed to close DB : ", err.Error())
 	}
 }
 
-func create(db *sql.DB, user model.User) model.User {
-	err := db.QueryRow("INSERT INTO mst_user (username, password, role) VALUES  ($1, $2, $3) RETURNING id",
+func create(user model.User) (model.User, error) {
+	err := DB.QueryRow("INSERT INTO mst_user (username, password, role) VALUES  ($1, $2, $3) RETURNING id",
 		user.Name, user.Password, user.Role,
 	).Scan(&user.Id)
 	if err != nil {
-		fmt.Println("Failed to create user : ", err.Error())
-		return model.User{}
+		return model.User{}, fmt.Errorf("failed to create user : " + err.Error())
 	}
-	return user
+	return user, nil
 }
 
-func list(db *sql.DB) []model.User {
+func list() ([]model.User, error) {
 	var users []model.User
-	rows, err := db.Query("SELECT id, username, role FROM mst_user")
+	rows, err := DB.Query("SELECT id, username, role FROM mst_user")
 	if err != nil {
-		fmt.Println("Failed to list users : ", err.Error())
-		return []model.User{}
+		return []model.User{}, fmt.Errorf("failed to list user from database : " + err.Error())
 	}
 	for rows.Next() {
 		var user model.User
 		err := rows.Scan(&user.Id, &user.Name, &user.Role)
 		if err != nil {
-			fmt.Println("Failure occured when scanning data : ", err.Error())
-			return []model.User{}
+			return []model.User{}, fmt.Errorf("failure occured when scanning data : " + err.Error())
 		}
 		users = append(users, user)
 	}
-	return users
+	return users, nil
 }
 
-func get(db *sql.DB, id uint32) model.User {
+func get(id uint32) (model.User, error) {
 	var user model.User
-	err := db.QueryRow("SELECT id, username, role FROM mst_user WHERE id = $1", id).Scan(&user.Id, &user.Name, &user.Role)
+	err := DB.QueryRow("SELECT id, username, role FROM mst_user WHERE id = $1", id).Scan(&user.Id, &user.Name, &user.Role)
 	if err != nil {
-		fmt.Println("Failed to get user by id : ", err.Error())
-		return model.User{}
+		return model.User{}, fmt.Errorf("failed to get user by id : " + err.Error())
 	}
-	return user
+	return user, nil
 }
 
-func getByNamePassword(db *sql.DB, name string, password string) model.User {
+func getByNamePassword(name string, password string) (model.User, error) {
 	var user model.User
-	err := db.QueryRow("SELECT id, username, role FROM mst_user WHERE username = $1 and password = $2", name, password).Scan(&user.Id, &user.Name, &user.Role)
+	err := DB.QueryRow("SELECT id, username, role FROM mst_user WHERE username = $1 and password = $2", name, password).Scan(&user.Id, &user.Name, &user.Role)
 	if err != nil {
-		fmt.Println("Failed to get user by name and password : ", err.Error())
-		return model.User{}
+		return model.User{}, fmt.Errorf("failed to gert user by name and password : " + err.Error())
 	}
-	return user
+	return user, nil
 }
