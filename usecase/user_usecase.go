@@ -29,8 +29,8 @@ func GetUserById(id uint32) (model.User, error) {
 	}
 	result, err := repository.User(params)
 	return result.Get, err
-}
 
+}
 func GetUserByNamePassword(name string, password string) (model.User, error) {
 	params := &repository.Params{
 		Req:      repository.GetByNamePasswordRequest,

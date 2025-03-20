@@ -3,7 +3,9 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	_ "github.com/lib/pq"
 )
 
@@ -20,9 +22,17 @@ type apiconfig struct {
 	apiport string
 }
 
+type TokenConfig struct {
+	ApplicationName     string
+	JwtSignatureKey     []byte
+	JwtSigningMethod    *jwt.SigningMethodHMAC
+	AccessTokenLifeTime time.Duration
+}
+
 type Config struct {
 	dbconfig
 	apiconfig
+	TokenConfig
 }
 
 func (c *Config) DB() (*sql.DB, error) {
@@ -55,8 +65,18 @@ func (c *Config) DB() (*sql.DB, error) {
 func (c *Config) API() string {
 	if c.apiconfig == (apiconfig{}) {
 		c.apiconfig = apiconfig{
-			apiport: "8888",
+			apiport: ":8888",
 		}
 	}
 	return c.apiport
+}
+
+func (c *Config) Token() *TokenConfig {
+	accessTokenLifeTime := time.Duration(1) * time.Hour
+	return &TokenConfig{
+		ApplicationName:     "Hell",
+		JwtSignatureKey:     []byte("The humor's not the same, coming from denial"),
+		JwtSigningMethod:    jwt.SigningMethodHS256,
+		AccessTokenLifeTime: accessTokenLifeTime,
+	}
 }

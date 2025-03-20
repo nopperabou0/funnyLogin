@@ -25,7 +25,7 @@ func StartServer() {
 	var userController = controller.User{
 		RG: rg,
 	}
-	host := fmt.Sprintf(":%s", conf.API())
+	host := conf.API()
 	userController.Route()
 	err = engine.Run(host)
 	if err != nil {

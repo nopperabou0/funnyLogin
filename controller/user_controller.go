@@ -17,13 +17,13 @@ func (u *User) createUser(c *gin.Context) {
 	var payload model.User
 	err := c.ShouldBindJSON(&payload)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": "failed to get parameter : " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
 
 	user, err := usecase.CreateUser(payload)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": "failed to create user : " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, user)
@@ -32,7 +32,7 @@ func (u *User) createUser(c *gin.Context) {
 func (u *User) getAllUser(c *gin.Context) {
 	users, err := usecase.ListAllUsers()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": "failed to list all users : " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
 	if len(users) > 0 {
@@ -46,7 +46,7 @@ func (u *User) getUserById(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	user, err := usecase.GetUserById(uint32(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": "failed to get user by id : " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, user)
