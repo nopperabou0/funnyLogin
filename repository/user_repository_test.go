@@ -2,7 +2,9 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"funny-login/model"
+	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -51,6 +53,35 @@ func (suite *UserRepositoryTestSuite) TestCreate_Success() {
 	actualData, err := User(suite.mockParams)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), &expectedCrud, actualData)
+}
+
+func (suite *UserRepositoryTestSuite) TestCreate_Failed() {
+	suite.mockSql.ExpectQuery("INSERT INTO mst_user").WithArgs(
+		model.User{},
+	).WillReturnError(fmt.Errorf("failed to create user"))
+	DB = suite.mockDB
+	suite.mockParams = &Params{
+		Req:  CreateRequest,
+		User: model.User{},
+	}
+	actualData, err := User(suite.mockParams)
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), &CRUD{}, actualData)
+
+}
+
+func (suite *UserRepositoryTestSuite) TestGet_Failed() {
+	suite.mockSql.ExpectQuery(regexp.QuoteMeta(`SELECT id, username, role FROM mst_user WHERE id = $1`)).WithArgs(1).WillReturnError(fmt.Errorf("no user found"))
+	DB = suite.mockDB
+	suite.mockParams = &Params{
+		Req: GetRequest,
+		Id:  2,
+	}
+	actualData, err := User(suite.mockParams)
+	assert.NotNil(suite.T(), err)
+	assert.Error(suite.T(), err)
+	assert.Equal(suite.T(), &CRUD{}, actualData)
+
 }
 
 func TestUserRepositoryTestSuite(t *testing.T) {
