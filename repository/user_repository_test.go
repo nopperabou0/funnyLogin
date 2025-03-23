@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"funny-login/model"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -69,9 +70,34 @@ func (suite *UserRepositoryTestSuite) TestCreate_Failed() {
 	assert.Equal(suite.T(), &CRUD{}, actualData)
 
 }
+func (suite *UserRepositoryTestSuite) TestGet_Success() {
+	id, _ := strconv.Atoi(expectedUser.Id)
+	suite.mockSql.ExpectQuery(regexp.QuoteMeta("SELECT id, username, role FROM mst_user WHERE id = $1")).WithArgs(id).WillReturnRows(sqlmock.NewRows([]string{"id", "username", "role"}).AddRow(expectedUser.Id, expectedUser.Name, expectedUser.Role))
 
+	DB = suite.mockDB
+
+	suite.mockParams = &Params{
+		Req: GetRequest,
+		Id:  1,
+	}
+
+	expectedCrud = CRUD{
+		Create: model.User{},
+		List:   nil,
+		Get: model.User{
+			Id:   expectedUser.Id,
+			Name: expectedUser.Name,
+			Role: expectedUser.Role,
+		},
+		GetByNamePassword: model.User{},
+	}
+
+	actualData, err := User(suite.mockParams)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), &expectedCrud, actualData)
+}
 func (suite *UserRepositoryTestSuite) TestGet_Failed() {
-	suite.mockSql.ExpectQuery(regexp.QuoteMeta(`SELECT id, username, role FROM mst_user WHERE id = $1`)).WithArgs(1).WillReturnError(fmt.Errorf("no user found"))
+	suite.mockSql.ExpectQuery(regexp.QuoteMeta(`SELECT id, username, role FROM mst_user WHERE id = $1`)).WithArgs(2).WillReturnError(fmt.Errorf("no user found"))
 	DB = suite.mockDB
 	suite.mockParams = &Params{
 		Req: GetRequest,
