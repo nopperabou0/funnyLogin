@@ -33,6 +33,19 @@ var expectedUser = model.User{
 	Role:     "admin",
 }
 
+var expectedUsers = []model.User{{
+	Id:       "1",
+	Name:     "Maher",
+	Password: "",
+	Role:     "admin",
+}, {
+	Id:       "2",
+	Name:     "Fauzi",
+	Password: "",
+	Role:     "user",
+},
+}
+
 var expectedCrud = CRUD{
 	Create:            expectedUser,
 	List:              nil,
@@ -96,6 +109,7 @@ func (suite *UserRepositoryTestSuite) TestGet_Success() {
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), &expectedCrud, actualData)
 }
+
 func (suite *UserRepositoryTestSuite) TestGet_Failed() {
 	suite.mockSql.ExpectQuery(regexp.QuoteMeta(`SELECT id, username, role FROM mst_user WHERE id = $1`)).WithArgs(2).WillReturnError(fmt.Errorf("no user found"))
 	DB = suite.mockDB
@@ -107,6 +121,63 @@ func (suite *UserRepositoryTestSuite) TestGet_Failed() {
 	assert.NotNil(suite.T(), err)
 	assert.Error(suite.T(), err)
 	assert.Equal(suite.T(), &CRUD{}, actualData)
+
+}
+
+func (suite *UserRepositoryTestSuite) TestList_Success() {
+	suite.mockSql.ExpectQuery("SELECT id, username, role FROM mst_user").WithoutArgs().WillReturnRows(sqlmock.NewRows([]string{"id", "username", "role"}).AddRow(expectedUsers[0].Id, expectedUsers[0].Name, expectedUsers[0].Role).AddRow(expectedUsers[1].Id, expectedUsers[1].Name, expectedUsers[1].Role))
+
+	DB = suite.mockDB
+	suite.mockParams = &Params{
+		Req: ListRequest,
+	}
+
+	expectedCrud = CRUD{
+		Create:            model.User{},
+		Get:               model.User{},
+		List:              expectedUsers,
+		GetByNamePassword: model.User{},
+	}
+	actualData, err := User(suite.mockParams)
+	assert.Nil(suite.T(), err)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), &expectedCrud, actualData)
+}
+
+func (suite *UserRepositoryTestSuite) TestList_Failed() {
+	suite.mockSql.ExpectQuery("SELECT id, username, role FROM mst_user").WithoutArgs().WillReturnError(fmt.Errorf("failed to list user"))
+
+	DB = suite.mockDB
+
+	suite.mockParams = &Params{
+		Req: ListRequest,
+	}
+
+	expectedCrud = CRUD{
+		Create:            model.User{},
+		Get:               model.User{},
+		List:              []model.User{},
+		GetByNamePassword: model.User{},
+	}
+
+	actualData, err := User(suite.mockParams)
+	assert.NotNil(suite.T(), err)
+	assert.Error(suite.T(), err)
+	assert.Equal(suite.T(), &expectedCrud, actualData)
+}
+
+func (suite *UserRepositoryTestSuite) TestList_ScanFailed() {
+	suite.mockSql.ExpectQuery("SELECT id, username, role FROM mst_user").WithoutArgs().WillReturnRows(sqlmock.NewRows([]string{"id", "name"}).AddRow(expectedUsers[0].Id, expectedUsers[0].Name).AddRow(expectedUsers[1].Id, expectedUsers[1].Name))
+
+	suite.mockParams = &Params{
+		Req: ListRequest,
+	}
+
+	DB = suite.mockDB
+
+	_, err := User(suite.mockParams)
+	assert.NotNil(suite.T(), err)
+	assert.Error(suite.T(), err)
 
 }
 

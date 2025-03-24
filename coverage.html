@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>config: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">funny-login/config/config.go (0.0%)</option>
+				
+				<option value="file1">funny-login/controller/auth_controller.go (0.0%)</option>
+				
+				<option value="file2">funny-login/controller/user_controller.go (0.0%)</option>
+				
+				<option value="file3">funny-login/main.go (0.0%)</option>
+				
+				<option value="file4">funny-login/middleware/auth_middleware.go (0.0%)</option>
+				
+				<option value="file5">funny-login/repository/user_repository.go (75.0%)</option>
+				
+				<option value="file6">funny-login/server.go (0.0%)</option>
+				
+				<option value="file7">funny-login/usecase/auth_usecase.go (0.0%)</option>
+				
+				<option value="file8">funny-login/usecase/user_usecase.go (0.0%)</option>
+				
+				<option value="file9">funny-login/utils/jwt_service/jwt_service.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package config
+
+import (
+        "database/sql"
+        "fmt"
+        "time"
+
+        "github.com/golang-jwt/jwt/v5"
+        _ "github.com/lib/pq"
+)
+
+type dbconfig struct {
+        host     string
+        port     string
+        database string
+        username string
+        password string
+        driver   string
+}
+
+type apiconfig struct {
+        apiport string
+}
+
+type TokenConfig struct {
+        ApplicationName     string
+        JwtSignatureKey     []byte
+        JwtSigningMethod    *jwt.SigningMethodHMAC
+        AccessTokenLifeTime time.Duration
+}
+
+type Config struct {
+        dbconfig
+        apiconfig
+        TokenConfig
+}
+
+func (c *Config) DB() (*sql.DB, error) <span class="cov0" title="0">{
+        if c.dbconfig == (dbconfig{}) </span><span class="cov0" title="0">{
+                c.dbconfig = dbconfig{
+                        host:     "localhost",
+                        port:     "5432",
+                        database: "enigma_laundry",
+                        username: "postgres",
+                        password: "1234",
+                        driver:   "postgres",
+                }
+        }</span>
+        <span class="cov0" title="0">var dbConf string = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+                c.host,
+                c.port,
+                c.username,
+                c.password,
+                c.database)
+
+        db, err := sql.Open(c.driver, dbConf)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return db, nil</span>
+}
+
+func (c *Config) API() string <span class="cov0" title="0">{
+        if c.apiconfig == (apiconfig{}) </span><span class="cov0" title="0">{
+                c.apiconfig = apiconfig{
+                        apiport: ":8888",
+                }
+        }</span>
+        <span class="cov0" title="0">return c.apiport</span>
+}
+
+func (c *Config) Token() *TokenConfig <span class="cov0" title="0">{
+        accessTokenLifeTime := time.Duration(1) * time.Hour
+        return &amp;TokenConfig{
+                ApplicationName:     "Hell",
+                JwtSignatureKey:     []byte("The humor's not the same, coming from denial"),
+                JwtSigningMethod:    jwt.SigningMethodHS256,
+                AccessTokenLifeTime: accessTokenLifeTime,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package controller
+
+import (
+        "fmt"
+        "funny-login/model"
+        "funny-login/usecase"
+
+        "github.com/gin-gonic/gin"
+)
+
+type Auth struct {
+        RG *gin.RouterGroup
+}
+
+func (a *Auth) loginHandler(c *gin.Context) <span class="cov0" title="0">{
+        var payload model.User
+        if err := c.ShouldBindJSON(&amp;payload); err != nil </span><span class="cov0" title="0">{
+                c.JSON(400, gin.H{"err": fmt.Errorf("authentication failed : %s", err.Error())})
+                return
+        }</span>
+
+        <span class="cov0" title="0">token, err := usecase.Login(payload.Name, payload.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(500, gin.H{"err": err})
+                return
+        }</span>
+        <span class="cov0" title="0">c.JSON(201, gin.H{"token": token})</span>
+}
+
+func (a *Auth) Route() <span class="cov0" title="0">{
+        a.RG.POST("/login", a.loginHandler)
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package controller
+
+import (
+        "funny-login/middleware"
+        "funny-login/model"
+        "funny-login/usecase"
+        role "funny-login/utils/role"
+        "net/http"
+        "strconv"
+
+        "github.com/gin-gonic/gin"
+)
+
+type User struct {
+        RG *gin.RouterGroup
+}
+
+func (u *User) createUser(c *gin.Context) <span class="cov0" title="0">{
+        var payload model.User
+        err := c.ShouldBindJSON(&amp;payload)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">user, err := usecase.CreateUser(payload)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+                return
+        }</span>
+        <span class="cov0" title="0">c.JSON(http.StatusCreated, user)</span>
+}
+
+func (u *User) getAllUser(c *gin.Context) <span class="cov0" title="0">{
+        users, err := usecase.ListAllUsers()
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+                return
+        }</span>
+        <span class="cov0" title="0">if len(users) &gt; 0 </span><span class="cov0" title="0">{
+                c.JSON(http.StatusOK, users)
+                return
+        }</span>
+        <span class="cov0" title="0">c.JSON(http.StatusOK, gin.H{"message": "List user empty"})</span>
+}
+
+func (u *User) getUserById(c *gin.Context) <span class="cov0" title="0">{
+        id, _ := strconv.Atoi(c.Param("id"))
+        user, err := usecase.GetUserById(uint32(id))
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+                return
+        }</span>
+        <span class="cov0" title="0">c.JSON(http.StatusOK, user)</span>
+}
+
+func (u *User) Route() <span class="cov0" title="0">{
+
+        u.RG.POST("/users", middleware.RequireToken(role.Admin), u.createUser)
+        u.RG.GET("/users", middleware.RequireToken(role.Admin), u.getAllUser)
+        u.RG.GET("/users/:id", middleware.RequireToken(role.Admin), u.getUserById)
+
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package main
+
+func main() <span class="cov0" title="0">{
+        StartServer()
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package middleware
+
+import (
+        "funny-login/model"
+        jwtservice "funny-login/utils/jwt_service"
+        role "funny-login/utils/role"
+        "net/http"
+        "strings"
+
+        "github.com/gin-gonic/gin"
+)
+
+type authHeader struct {
+        AuthorizationHeader string `header:"Authorization" binding:"required"`
+}
+
+func RequireToken(roles ...role.Roles) gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                var aH authHeader
+                if err := c.ShouldBindHeader(&amp;aH); err != nil </span><span class="cov0" title="0">{
+                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized : " + err.Error()})
+                        return
+                }</span>
+                <span class="cov0" title="0">token := strings.Replace(aH.AuthorizationHeader, "Bearer ", "", 1)
+                tokenClaim, err := jwtservice.VerifyToken(token)
+                if err != nil </span><span class="cov0" title="0">{
+                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized : " + err.Error()})
+                        return
+                }</span>
+                <span class="cov0" title="0">c.Set("user", model.User{
+                        Id:   tokenClaim.ID,
+                        Role: tokenClaim.Role,
+                })
+
+                validRole := false
+
+                for _, role := range roles </span><span class="cov0" title="0">{
+                        if string(role) == tokenClaim.Role </span><span class="cov0" title="0">{
+                                validRole = true
+                                break</span>
+                        }
+                }
+
+                <span class="cov0" title="0">if !validRole </span><span class="cov0" title="0">{
+                        c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+                                "message": "Forbidden Resource"})
+                }</span>
+
+                <span class="cov0" title="0">c.Next()</span>
+
+        }
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package repository
+
+import (
+        "database/sql"
+        "fmt"
+        "funny-login/model"
+)
+
+type Request string
+
+const (
+        CreateRequest            Request = "CreateUser"
+        ListRequest              Request = "ListAllUsers"
+        GetRequest               Request = "GetUserById"
+        GetByNamePasswordRequest Request = "GetUserByNamePassword"
+)
+
+type Params struct {
+        Req      Request
+        User     model.User
+        Id       uint32
+        Name     string
+        Password string
+}
+
+type CRUD struct {
+        Create            model.User
+        List              []model.User
+        Get               model.User
+        GetByNamePassword model.User
+}
+
+func User(withParameter *Params) (*CRUD, error) <span class="cov8" title="1">{
+        var crud = CRUD{}
+        var err error
+        switch withParameter.Req </span>{
+        case CreateRequest:<span class="cov8" title="1">
+                crud.Create, err = create(withParameter.User)</span>
+        case ListRequest:<span class="cov8" title="1">
+                crud.List, err = list()</span>
+        case GetRequest:<span class="cov8" title="1">
+                crud.Get, err = get(withParameter.Id)</span>
+        case GetByNamePasswordRequest:<span class="cov0" title="0">
+                crud.GetByNamePassword, err = getByNamePassword(withParameter.Name, withParameter.Password)</span>
+        }
+        <span class="cov8" title="1">return &amp;crud, err</span>
+}
+
+var DB *sql.DB
+
+func CloseDB() <span class="cov0" title="0">{
+        err := DB.Close()
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println("Failed to close DB : ", err.Error())
+        }</span>
+}
+
+func create(user model.User) (model.User, error) <span class="cov8" title="1">{
+        err := DB.QueryRow("INSERT INTO mst_user (username, password, role) VALUES  ($1, $2, $3) RETURNING id",
+                user.Name, user.Password, user.Role,
+        ).Scan(&amp;user.Id)
+        if err != nil </span><span class="cov8" title="1">{
+                return model.User{}, fmt.Errorf("failed to create user : " + err.Error())
+        }</span>
+        <span class="cov8" title="1">return user, nil</span>
+}
+
+func list() ([]model.User, error) <span class="cov8" title="1">{
+        var users []model.User
+        rows, err := DB.Query("SELECT id, username, role FROM mst_user")
+        if err != nil </span><span class="cov8" title="1">{
+                return []model.User{}, fmt.Errorf("failed to list user from database : " + err.Error())
+        }</span>
+        <span class="cov8" title="1">for rows.Next() </span><span class="cov8" title="1">{
+                var user model.User
+                err := rows.Scan(&amp;user.Id, &amp;user.Name, &amp;user.Role)
+                if err != nil </span><span class="cov8" title="1">{
+                        return []model.User{}, fmt.Errorf("failure occured when scanning data : " + err.Error())
+                }</span>
+                <span class="cov8" title="1">users = append(users, user)</span>
+        }
+        <span class="cov8" title="1">return users, nil</span>
+}
+
+func get(id uint32) (model.User, error) <span class="cov8" title="1">{
+        var user model.User
+        err := DB.QueryRow("SELECT id, username, role FROM mst_user WHERE id = $1", id).Scan(&amp;user.Id, &amp;user.Name, &amp;user.Role)
+        if err != nil </span><span class="cov8" title="1">{
+                return model.User{}, fmt.Errorf("failed to get user by id : " + err.Error())
+        }</span>
+        <span class="cov8" title="1">return user, nil</span>
+}
+
+func getByNamePassword(name string, password string) (model.User, error) <span class="cov0" title="0">{
+        var user model.User
+        err := DB.QueryRow("SELECT id, username, role FROM mst_user WHERE username = $1 and password = $2", name, password).Scan(&amp;user.Id, &amp;user.Name, &amp;user.Role)
+        if err != nil </span><span class="cov0" title="0">{
+                return model.User{}, fmt.Errorf("failed to gert user by name and password : " + err.Error())
+        }</span>
+        <span class="cov0" title="0">return user, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package main
+
+import (
+        "fmt"
+        "funny-login/config"
+        "funny-login/controller"
+        "funny-login/repository"
+        jwtservice "funny-login/utils/jwt_service"
+
+        "github.com/gin-gonic/gin"
+)
+
+func StartServer() <span class="cov0" title="0">{
+        var engine *gin.Engine = gin.Default()
+        var conf config.Config
+        var err error
+
+        repository.DB, err = conf.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("connection error : %v", err.Error()))</span>
+        }
+        <span class="cov0" title="0">defer repository.CloseDB()
+
+        jwtservice.Conf = *conf.Token()
+
+        rg := engine.Group("/api/v1")
+        var userController = controller.User{
+                RG: rg,
+        }
+        var authController = controller.Auth{
+                RG: rg,
+        }
+        userController.Route()
+        authController.Route()
+
+        host := conf.API()
+        err = engine.Run(host)
+
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("server not running on host %s, because error %v", host, err.Error()))</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package usecase
+
+import (
+        "fmt"
+        jwtservice "funny-login/utils/jwt_service"
+)
+
+func Login(name string, password string) (string, error) <span class="cov0" title="0">{
+        user, err := GetUserByNamePassword(name, password)
+        var token string
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">token, err = jwtservice.CreateToken(user)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed creating token : " + err.Error())
+        }</span>
+        <span class="cov0" title="0">return token, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package usecase
+
+import (
+        "funny-login/model"
+        "funny-login/repository"
+)
+
+func CreateUser(user model.User) (model.User, error) <span class="cov0" title="0">{
+        params := &amp;repository.Params{
+                Req:  repository.CreateRequest,
+                User: user,
+        }
+        result, err := repository.User(params)
+        return result.Create, err
+}</span>
+
+func ListAllUsers() ([]model.User, error) <span class="cov0" title="0">{
+        params := &amp;repository.Params{
+                Req: repository.ListRequest,
+        }
+        result, err := repository.User(params)
+        return result.List, err
+}</span>
+
+func GetUserById(id uint32) (model.User, error) <span class="cov0" title="0">{
+        params := &amp;repository.Params{
+                Req: repository.GetRequest,
+                Id:  id,
+        }
+        result, err := repository.User(params)
+        return result.Get, err
+
+}</span>
+func GetUserByNamePassword(name string, password string) (model.User, error) <span class="cov0" title="0">{
+        params := &amp;repository.Params{
+                Req:      repository.GetByNamePasswordRequest,
+                Name:     name,
+                Password: password,
+        }
+        result, err := repository.User(params)
+        return result.GetByNamePassword, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package jwtservice
+
+import (
+        "fmt"
+        "funny-login/config"
+        "funny-login/model"
+        modelutil "funny-login/utils/model_util"
+        "time"
+
+        "github.com/golang-jwt/jwt/v5"
+)
+
+var Conf config.TokenConfig
+
+func CreateToken(user model.User) (string, error) <span class="cov0" title="0">{
+        signatureKey := Conf.JwtSignatureKey
+        claims := modelutil.JwtPayloadClaim{
+                RegisteredClaims: jwt.RegisteredClaims{
+                        Issuer:    Conf.ApplicationName,
+                        ExpiresAt: jwt.NewNumericDate(time.Now().Add(Conf.AccessTokenLifeTime)),
+                },
+                UserId: user.Id,
+                Role:   user.Role,
+        }
+        token, err := jwt.NewWithClaims(Conf.JwtSigningMethod, claims).SignedString(signatureKey)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">return token, nil</span>
+}
+
+func VerifyToken(token string) (modelutil.JwtPayloadClaim, error) <span class="cov0" title="0">{
+        tokenParse, err := jwt.ParseWithClaims(
+                token,
+                &amp;modelutil.JwtPayloadClaim{},
+                func(t *jwt.Token) (any, error) </span><span class="cov0" title="0">{
+                        return Conf.JwtSignatureKey, nil
+                }</span>)
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                return modelutil.JwtPayloadClaim{}, fmt.Errorf("error token parsing : %s", err.Error())
+        }</span>
+        <span class="cov0" title="0">claim, ok := tokenParse.Claims.(*modelutil.JwtPayloadClaim)
+        if !ok </span><span class="cov0" title="0">{
+                return modelutil.JwtPayloadClaim{}, fmt.Errorf("error claim")
+        }</span>
+        <span class="cov0" title="0">return *claim, nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
