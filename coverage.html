@@ -71,7 +71,7 @@
 				
 				<option value="file7">funny-login/usecase/auth_usecase.go (0.0%)</option>
 				
-				<option value="file8">funny-login/usecase/user_usecase.go (0.0%)</option>
+				<option value="file8">funny-login/usecase/user_usecase.go (25.0%)</option>
 				
 				<option value="file9">funny-login/utils/jwt_service/jwt_service.go (0.0%)</option>
 				
@@ -507,7 +507,7 @@ import (
         "funny-login/repository"
 )
 
-func CreateUser(user model.User) (model.User, error) <span class="cov0" title="0">{
+func CreateUser(user model.User) (model.User, error) <span class="cov8" title="1">{
         params := &amp;repository.Params{
                 Req:  repository.CreateRequest,
                 User: user,
