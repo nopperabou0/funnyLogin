@@ -1,63 +1,68 @@
 package controller
 
 import (
-	"funny-login/middleware"
-	"funny-login/model"
-	"funny-login/usecase"
-	role "funny-login/utils/role"
 	"net/http"
 	"strconv"
 
+	"enigmacamp.com/unit-test-starter-pack/middleware"
+	"enigmacamp.com/unit-test-starter-pack/model"
+	"enigmacamp.com/unit-test-starter-pack/usecase"
 	"github.com/gin-gonic/gin"
 )
 
-type User struct {
-	RG *gin.RouterGroup
+type UserController struct {
+	useCase        usecase.UserUseCase
+	rg             *gin.RouterGroup
+	authMiddleware middleware.AuthMiddleware
 }
 
-func (u *User) createUser(c *gin.Context) {
-	var payload model.User
-	err := c.ShouldBindJSON(&payload)
-	if err != nil {
+func (b *UserController) createUser(c *gin.Context) {
+	var payload model.UserCredential
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
 
-	user, err := usecase.CreateUser(payload)
+	book, err := b.useCase.RegisterNewUser(payload)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "Failed to create user"})
 		return
 	}
-	c.JSON(http.StatusCreated, user)
+
+	c.JSON(http.StatusCreated, book)
 }
 
-func (u *User) getAllUser(c *gin.Context) {
-	users, err := usecase.ListAllUsers()
+func (b *UserController) getAllUser(c *gin.Context) {
+	books, err := b.useCase.FindAllUser()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "Failed to retrieve data users"})
 		return
 	}
-	if len(users) > 0 {
-		c.JSON(http.StatusOK, users)
+
+	if len(books) > 0 {
+		c.JSON(http.StatusOK, books)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "List user empty"})
 }
 
-func (u *User) getUserById(c *gin.Context) {
+func (b *UserController) getUserById(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	user, err := usecase.GetUserById(uint32(id))
+	book, err := b.useCase.FindUserById(uint32(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "Failed to get user by ID"})
 		return
 	}
-	c.JSON(http.StatusOK, user)
+
+	c.JSON(http.StatusOK, book)
 }
 
-func (u *User) Route() {
+func (b *UserController) Route() {
+	b.rg.POST("/users", b.authMiddleware.RequireToken("admin"), b.createUser)
+	b.rg.GET("/users", b.authMiddleware.RequireToken("admin"), b.getAllUser)
+	b.rg.GET("/users/:id", b.authMiddleware.RequireToken("admin"), b.getUserById)
+}
 
-	u.RG.POST("/users", middleware.RequireToken(role.Admin), u.createUser)
-	u.RG.GET("/users", middleware.RequireToken(role.Admin), u.getAllUser)
-	u.RG.GET("/users/:id", middleware.RequireToken(role.Admin), u.getUserById)
-
+func NewUserController(useCase usecase.UserUseCase, rg *gin.RouterGroup, am middleware.AuthMiddleware) *UserController {
+	return &UserController{useCase: useCase, rg: rg, authMiddleware: am}
 }

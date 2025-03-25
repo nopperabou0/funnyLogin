@@ -1,32 +1,36 @@
 package controller
 
 import (
-	"fmt"
-	"funny-login/model"
-	"funny-login/usecase"
-
+	"enigmacamp.com/unit-test-starter-pack/model"
+	"enigmacamp.com/unit-test-starter-pack/usecase"
 	"github.com/gin-gonic/gin"
 )
 
-type Auth struct {
-	RG *gin.RouterGroup
+type AuthController struct {
+	authUc usecase.AuthenticationUseCase
+	rg     *gin.RouterGroup
 }
 
-func (a *Auth) loginHandler(c *gin.Context) {
-	var payload model.User
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(400, gin.H{"err": fmt.Errorf("authentication failed : %s", err.Error())})
+func (a *AuthController) loginHandler(ctx *gin.Context) {
+	var payload model.UserCredential
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		ctx.JSON(400, gin.H{"err": err})
 		return
 	}
 
-	token, err := usecase.Login(payload.Name, payload.Password)
+	token, err := a.authUc.Login(payload.Username, payload.Password)
 	if err != nil {
-		c.JSON(500, gin.H{"err": err})
+		ctx.JSON(500, gin.H{"err": err})
 		return
 	}
-	c.JSON(201, gin.H{"token": token})
+
+	ctx.JSON(201, gin.H{"token": token})
 }
 
-func (a *Auth) Route() {
-	a.RG.POST("/login", a.loginHandler)
+func (a *AuthController) Route() {
+	a.rg.POST("/login", a.loginHandler)
+}
+
+func NewAuthController(authUc usecase.AuthenticationUseCase, rg *gin.RouterGroup) *AuthController {
+	return &AuthController{authUc: authUc, rg: rg}
 }

@@ -1,42 +1,37 @@
 package usecase
 
 import (
-	"funny-login/model"
-	"funny-login/repository"
+	"enigmacamp.com/unit-test-starter-pack/model"
+	"enigmacamp.com/unit-test-starter-pack/repository"
 )
 
-func CreateUser(user model.User) (model.User, error) {
-	params := &repository.Params{
-		Req:  repository.CreateRequest,
-		User: user,
-	}
-	result, err := repository.User(params)
-	return result.Create, err
+type UserUseCase interface {
+	RegisterNewUser(payload model.UserCredential) (model.UserCredential, error)
+	FindAllUser() ([]model.UserCredential, error)
+	FindUserById(id uint32) (model.UserCredential, error)
+	FindUserByUsernamePassword(username string, password string) (model.UserCredential, error)
 }
 
-func ListAllUsers() ([]model.User, error) {
-	params := &repository.Params{
-		Req: repository.ListRequest,
-	}
-	result, err := repository.User(params)
-	return result.List, err
+type userUseCase struct {
+	repo repository.UserRepository
 }
 
-func GetUserById(id uint32) (model.User, error) {
-	params := &repository.Params{
-		Req: repository.GetRequest,
-		Id:  id,
-	}
-	result, err := repository.User(params)
-	return result.Get, err
-
+func (u *userUseCase) RegisterNewUser(payload model.UserCredential) (model.UserCredential, error) {
+	return u.repo.Create(payload)
 }
-func GetUserByNamePassword(name string, password string) (model.User, error) {
-	params := &repository.Params{
-		Req:      repository.GetByNamePasswordRequest,
-		Name:     name,
-		Password: password,
-	}
-	result, err := repository.User(params)
-	return result.GetByNamePassword, err
+
+func (u *userUseCase) FindAllUser() ([]model.UserCredential, error) {
+	return u.repo.List()
+}
+
+func (u *userUseCase) FindUserById(id uint32) (model.UserCredential, error) {
+	return u.repo.Get(id)
+}
+
+func (u *userUseCase) FindUserByUsernamePassword(username string, password string) (model.UserCredential, error) {
+	return u.repo.GetByUsernamePassword(username, password)
+}
+
+func NewUserUseCase(repo repository.UserRepository) UserUseCase {
+	return &userUseCase{repo: repo}
 }

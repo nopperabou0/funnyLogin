@@ -1,25 +1,22 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
-	"time"
-
 	"github.com/golang-jwt/jwt/v5"
-	_ "github.com/lib/pq"
+	"time"
 )
 
-type dbconfig struct {
-	host     string
-	port     string
-	database string
-	username string
-	password string
-	driver   string
+type DBConfig struct {
+	Host     string
+	Port     string
+	Database string
+	Username string
+	Password string
+	Driver   string
 }
 
-type apiconfig struct {
-	apiport string
+type APIConfig struct {
+	ApiPort string
 }
 
 type TokenConfig struct {
@@ -30,53 +27,45 @@ type TokenConfig struct {
 }
 
 type Config struct {
-	dbconfig
-	apiconfig
+	DBConfig
+	APIConfig
 	TokenConfig
 }
 
-func (c *Config) DB() (*sql.DB, error) {
-	if c.dbconfig == (dbconfig{}) {
-		c.dbconfig = dbconfig{
-			host:     "localhost",
-			port:     "5432",
-			database: "enigma_laundry",
-			username: "postgres",
-			password: "1234",
-			driver:   "postgres",
-		}
-	}
-	var dbConf string = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		c.host,
-		c.port,
-		c.username,
-		c.password,
-		c.database)
-
-	db, err := sql.Open(c.driver, dbConf)
-
-	if err != nil {
-		return nil, err
+func (c *Config) readConfig() error {
+	c.DBConfig = DBConfig{
+		Host:     "localhost",
+		Port:     "5432",
+		Database: "book_db",
+		Username: "jutioncandrakirana",
+		Password: "P@ssw0rd",
+		Driver:   "postgres",
 	}
 
-	return db, nil
-}
-
-func (c *Config) API() string {
-	if c.apiconfig == (apiconfig{}) {
-		c.apiconfig = apiconfig{
-			apiport: ":8888",
-		}
+	c.APIConfig = APIConfig{
+		ApiPort: "8888",
 	}
-	return c.apiport
-}
 
-func (c *Config) Token() *TokenConfig {
 	accessTokenLifeTime := time.Duration(1) * time.Hour
-	return &TokenConfig{
-		ApplicationName:     "Hell",
-		JwtSignatureKey:     []byte("The humor's not the same, coming from denial"),
+
+	c.TokenConfig = TokenConfig{
+		ApplicationName:     "Enigma Camp",
+		JwtSignatureKey:     []byte("IniSangatRahasia!!!!"),
 		JwtSigningMethod:    jwt.SigningMethodHS256,
 		AccessTokenLifeTime: accessTokenLifeTime,
 	}
+
+	if c.Host == "" || c.Port == "" || c.Username == "" || c.Password == "" || c.ApiPort == "" {
+		return fmt.Errorf("required config")
+	}
+
+	return nil
+}
+
+func NewConfig() (*Config, error) {
+	cfg := &Config{}
+	if err := cfg.readConfig(); err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }

@@ -1,42 +1,61 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
-	"funny-login/config"
-	"funny-login/controller"
-	"funny-login/repository"
-	jwtservice "funny-login/utils/jwt_service"
 
+	"enigmacamp.com/unit-test-starter-pack/middleware"
+	"enigmacamp.com/unit-test-starter-pack/utils/service"
+
+	"enigmacamp.com/unit-test-starter-pack/config"
+	"enigmacamp.com/unit-test-starter-pack/controller"
+	"enigmacamp.com/unit-test-starter-pack/repository"
+	"enigmacamp.com/unit-test-starter-pack/usecase"
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
-func StartServer() {
-	var engine *gin.Engine = gin.Default()
-	var conf config.Config
-	var err error
+type Server struct {
+	userUC     usecase.UserUseCase
+	authUc     usecase.AuthenticationUseCase
+	jwtService service.JwtService
+	engine     *gin.Engine
+	host       string
+}
 
-	repository.DB, err = conf.DB()
+func (s *Server) initRoute() {
+	rg := s.engine.Group("/api/v1")
+	authMiddleware := middleware.NewAuthMiddleware(s.jwtService)
+	controller.NewUserController(s.userUC, rg, authMiddleware).Route()
+	controller.NewAuthController(s.authUc, rg).Route()
+}
+
+func (s *Server) Run() {
+	s.initRoute()
+	if err := s.engine.Run(s.host); err != nil {
+		panic(fmt.Errorf("server not running on host %s, becauce error %v", s.host, err.Error()))
+	}
+}
+
+func NewServer() *Server {
+	cfg, _ := config.NewConfig()
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.Database)
+	db, err := sql.Open(cfg.Driver, dsn)
 	if err != nil {
-		panic(fmt.Errorf("connection error : %v", err.Error()))
+		panic("connection error")
 	}
-	defer repository.CloseDB()
-
-	jwtservice.Conf = *conf.Token()
-
-	rg := engine.Group("/api/v1")
-	var userController = controller.User{
-		RG: rg,
-	}
-	var authController = controller.Auth{
-		RG: rg,
-	}
-	userController.Route()
-	authController.Route()
-
-	host := conf.API()
-	err = engine.Run(host)
-
-	if err != nil {
-		panic(fmt.Errorf("server not running on host %s, because error %v", host, err.Error()))
+	userRepo := repository.NewUserRepository(db)
+	userUseCase := usecase.NewUserUseCase(userRepo)
+	jwtService := service.NewJwtService(cfg.TokenConfig)
+	authUseCase := usecase.NewAuthenticationUseCase(userUseCase, jwtService)
+	engine := gin.Default()
+	host := fmt.Sprintf(":%s", cfg.ApiPort)
+	return &Server{
+		userUC:     userUseCase,
+		authUc:     authUseCase,
+		jwtService: jwtService,
+		engine:     engine,
+		host:       host,
 	}
 }

@@ -55,25 +55,25 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">funny-login/config/config.go (0.0%)</option>
+				<option value="file0">enigmacamp.com/unit-test-starter-pack/config/config.go (0.0%)</option>
 				
-				<option value="file1">funny-login/controller/auth_controller.go (0.0%)</option>
+				<option value="file1">enigmacamp.com/unit-test-starter-pack/controller/auth_controller.go (0.0%)</option>
 				
-				<option value="file2">funny-login/controller/user_controller.go (0.0%)</option>
+				<option value="file2">enigmacamp.com/unit-test-starter-pack/controller/user_controller.go (0.0%)</option>
 				
-				<option value="file3">funny-login/main.go (0.0%)</option>
+				<option value="file3">enigmacamp.com/unit-test-starter-pack/main.go (0.0%)</option>
 				
-				<option value="file4">funny-login/middleware/auth_middleware.go (0.0%)</option>
+				<option value="file4">enigmacamp.com/unit-test-starter-pack/middleware/auth_middleware.go (0.0%)</option>
 				
-				<option value="file5">funny-login/repository/user_repository.go (75.0%)</option>
+				<option value="file5">enigmacamp.com/unit-test-starter-pack/repository/user_repository.go (80.8%)</option>
 				
-				<option value="file6">funny-login/server.go (0.0%)</option>
+				<option value="file6">enigmacamp.com/unit-test-starter-pack/server.go (0.0%)</option>
 				
-				<option value="file7">funny-login/usecase/auth_usecase.go (0.0%)</option>
+				<option value="file7">enigmacamp.com/unit-test-starter-pack/usecase/auth_usecase.go (0.0%)</option>
 				
-				<option value="file8">funny-login/usecase/user_usecase.go (25.0%)</option>
+				<option value="file8">enigmacamp.com/unit-test-starter-pack/usecase/user_usecase.go (0.0%)</option>
 				
-				<option value="file9">funny-login/utils/jwt_service/jwt_service.go (0.0%)</option>
+				<option value="file9">enigmacamp.com/unit-test-starter-pack/utils/service/jwt_service.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -90,25 +90,22 @@
 		<pre class="file" id="file0" style="display: none">package config
 
 import (
-        "database/sql"
         "fmt"
-        "time"
-
         "github.com/golang-jwt/jwt/v5"
-        _ "github.com/lib/pq"
+        "time"
 )
 
-type dbconfig struct {
-        host     string
-        port     string
-        database string
-        username string
-        password string
-        driver   string
+type DBConfig struct {
+        Host     string
+        Port     string
+        Database string
+        Username string
+        Password string
+        Driver   string
 }
 
-type apiconfig struct {
-        apiport string
+type APIConfig struct {
+        ApiPort string
 }
 
 type TokenConfig struct {
@@ -119,216 +116,223 @@ type TokenConfig struct {
 }
 
 type Config struct {
-        dbconfig
-        apiconfig
+        DBConfig
+        APIConfig
         TokenConfig
 }
 
-func (c *Config) DB() (*sql.DB, error) <span class="cov0" title="0">{
-        if c.dbconfig == (dbconfig{}) </span><span class="cov0" title="0">{
-                c.dbconfig = dbconfig{
-                        host:     "localhost",
-                        port:     "5432",
-                        database: "enigma_laundry",
-                        username: "postgres",
-                        password: "1234",
-                        driver:   "postgres",
-                }
-        }</span>
-        <span class="cov0" title="0">var dbConf string = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-                c.host,
-                c.port,
-                c.username,
-                c.password,
-                c.database)
+func (c *Config) readConfig() error <span class="cov0" title="0">{
+        c.DBConfig = DBConfig{
+                Host:     "localhost",
+                Port:     "5432",
+                Database: "book_db",
+                Username: "jutioncandrakirana",
+                Password: "P@ssw0rd",
+                Driver:   "postgres",
+        }
 
-        db, err := sql.Open(c.driver, dbConf)
+        c.APIConfig = APIConfig{
+                ApiPort: "8888",
+        }
 
-        if err != nil </span><span class="cov0" title="0">{
-                return nil, err
-        }</span>
-
-        <span class="cov0" title="0">return db, nil</span>
-}
-
-func (c *Config) API() string <span class="cov0" title="0">{
-        if c.apiconfig == (apiconfig{}) </span><span class="cov0" title="0">{
-                c.apiconfig = apiconfig{
-                        apiport: ":8888",
-                }
-        }</span>
-        <span class="cov0" title="0">return c.apiport</span>
-}
-
-func (c *Config) Token() *TokenConfig <span class="cov0" title="0">{
         accessTokenLifeTime := time.Duration(1) * time.Hour
-        return &amp;TokenConfig{
-                ApplicationName:     "Hell",
-                JwtSignatureKey:     []byte("The humor's not the same, coming from denial"),
+
+        c.TokenConfig = TokenConfig{
+                ApplicationName:     "Enigma Camp",
+                JwtSignatureKey:     []byte("IniSangatRahasia!!!!"),
                 JwtSigningMethod:    jwt.SigningMethodHS256,
                 AccessTokenLifeTime: accessTokenLifeTime,
         }
-}</span>
+
+        if c.Host == "" || c.Port == "" || c.Username == "" || c.Password == "" || c.ApiPort == "" </span><span class="cov0" title="0">{
+                return fmt.Errorf("required config")
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func NewConfig() (*Config, error) <span class="cov0" title="0">{
+        cfg := &amp;Config{}
+        if err := cfg.readConfig(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return cfg, nil</span>
+}
 </pre>
 		
 		<pre class="file" id="file1" style="display: none">package controller
 
 import (
-        "fmt"
-        "funny-login/model"
-        "funny-login/usecase"
-
+        "enigmacamp.com/unit-test-starter-pack/model"
+        "enigmacamp.com/unit-test-starter-pack/usecase"
         "github.com/gin-gonic/gin"
 )
 
-type Auth struct {
-        RG *gin.RouterGroup
+type AuthController struct {
+        authUc usecase.AuthenticationUseCase
+        rg     *gin.RouterGroup
 }
 
-func (a *Auth) loginHandler(c *gin.Context) <span class="cov0" title="0">{
-        var payload model.User
-        if err := c.ShouldBindJSON(&amp;payload); err != nil </span><span class="cov0" title="0">{
-                c.JSON(400, gin.H{"err": fmt.Errorf("authentication failed : %s", err.Error())})
+func (a *AuthController) loginHandler(ctx *gin.Context) <span class="cov0" title="0">{
+        var payload model.UserCredential
+        if err := ctx.ShouldBindJSON(&amp;payload); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(400, gin.H{"err": err})
                 return
         }</span>
 
-        <span class="cov0" title="0">token, err := usecase.Login(payload.Name, payload.Password)
+        <span class="cov0" title="0">token, err := a.authUc.Login(payload.Username, payload.Password)
         if err != nil </span><span class="cov0" title="0">{
-                c.JSON(500, gin.H{"err": err})
+                ctx.JSON(500, gin.H{"err": err})
                 return
         }</span>
-        <span class="cov0" title="0">c.JSON(201, gin.H{"token": token})</span>
+
+        <span class="cov0" title="0">ctx.JSON(201, gin.H{"token": token})</span>
 }
 
-func (a *Auth) Route() <span class="cov0" title="0">{
-        a.RG.POST("/login", a.loginHandler)
+func (a *AuthController) Route() <span class="cov0" title="0">{
+        a.rg.POST("/login", a.loginHandler)
+}</span>
+
+func NewAuthController(authUc usecase.AuthenticationUseCase, rg *gin.RouterGroup) *AuthController <span class="cov0" title="0">{
+        return &amp;AuthController{authUc: authUc, rg: rg}
 }</span>
 </pre>
 		
 		<pre class="file" id="file2" style="display: none">package controller
 
 import (
-        "funny-login/middleware"
-        "funny-login/model"
-        "funny-login/usecase"
-        role "funny-login/utils/role"
         "net/http"
         "strconv"
 
+        "enigmacamp.com/unit-test-starter-pack/middleware"
+        "enigmacamp.com/unit-test-starter-pack/model"
+        "enigmacamp.com/unit-test-starter-pack/usecase"
         "github.com/gin-gonic/gin"
 )
 
-type User struct {
-        RG *gin.RouterGroup
+type UserController struct {
+        useCase        usecase.UserUseCase
+        rg             *gin.RouterGroup
+        authMiddleware middleware.AuthMiddleware
 }
 
-func (u *User) createUser(c *gin.Context) <span class="cov0" title="0">{
-        var payload model.User
-        err := c.ShouldBindJSON(&amp;payload)
-        if err != nil </span><span class="cov0" title="0">{
+func (b *UserController) createUser(c *gin.Context) <span class="cov0" title="0">{
+        var payload model.UserCredential
+        if err := c.ShouldBindJSON(&amp;payload); err != nil </span><span class="cov0" title="0">{
                 c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
                 return
         }</span>
 
-        <span class="cov0" title="0">user, err := usecase.CreateUser(payload)
+        <span class="cov0" title="0">book, err := b.useCase.RegisterNewUser(payload)
         if err != nil </span><span class="cov0" title="0">{
-                c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+                c.JSON(http.StatusInternalServerError, gin.H{"err": "Failed to create user"})
                 return
         }</span>
-        <span class="cov0" title="0">c.JSON(http.StatusCreated, user)</span>
+
+        <span class="cov0" title="0">c.JSON(http.StatusCreated, book)</span>
 }
 
-func (u *User) getAllUser(c *gin.Context) <span class="cov0" title="0">{
-        users, err := usecase.ListAllUsers()
+func (b *UserController) getAllUser(c *gin.Context) <span class="cov0" title="0">{
+        books, err := b.useCase.FindAllUser()
         if err != nil </span><span class="cov0" title="0">{
-                c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+                c.JSON(http.StatusInternalServerError, gin.H{"err": "Failed to retrieve data users"})
                 return
         }</span>
-        <span class="cov0" title="0">if len(users) &gt; 0 </span><span class="cov0" title="0">{
-                c.JSON(http.StatusOK, users)
+
+        <span class="cov0" title="0">if len(books) &gt; 0 </span><span class="cov0" title="0">{
+                c.JSON(http.StatusOK, books)
                 return
         }</span>
         <span class="cov0" title="0">c.JSON(http.StatusOK, gin.H{"message": "List user empty"})</span>
 }
 
-func (u *User) getUserById(c *gin.Context) <span class="cov0" title="0">{
+func (b *UserController) getUserById(c *gin.Context) <span class="cov0" title="0">{
         id, _ := strconv.Atoi(c.Param("id"))
-        user, err := usecase.GetUserById(uint32(id))
+        book, err := b.useCase.FindUserById(uint32(id))
         if err != nil </span><span class="cov0" title="0">{
-                c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+                c.JSON(http.StatusInternalServerError, gin.H{"err": "Failed to get user by ID"})
                 return
         }</span>
-        <span class="cov0" title="0">c.JSON(http.StatusOK, user)</span>
+
+        <span class="cov0" title="0">c.JSON(http.StatusOK, book)</span>
 }
 
-func (u *User) Route() <span class="cov0" title="0">{
+func (b *UserController) Route() <span class="cov0" title="0">{
+        b.rg.POST("/users", b.authMiddleware.RequireToken("admin"), b.createUser)
+        b.rg.GET("/users", b.authMiddleware.RequireToken("admin"), b.getAllUser)
+        b.rg.GET("/users/:id", b.authMiddleware.RequireToken("admin"), b.getUserById)
+}</span>
 
-        u.RG.POST("/users", middleware.RequireToken(role.Admin), u.createUser)
-        u.RG.GET("/users", middleware.RequireToken(role.Admin), u.getAllUser)
-        u.RG.GET("/users/:id", middleware.RequireToken(role.Admin), u.getUserById)
-
+func NewUserController(useCase usecase.UserUseCase, rg *gin.RouterGroup, am middleware.AuthMiddleware) *UserController <span class="cov0" title="0">{
+        return &amp;UserController{useCase: useCase, rg: rg, authMiddleware: am}
 }</span>
 </pre>
 		
 		<pre class="file" id="file3" style="display: none">package main
 
 func main() <span class="cov0" title="0">{
-        StartServer()
+        NewServer().Run()
 }</span>
 </pre>
 		
 		<pre class="file" id="file4" style="display: none">package middleware
 
 import (
-        "funny-login/model"
-        jwtservice "funny-login/utils/jwt_service"
-        role "funny-login/utils/role"
         "net/http"
         "strings"
 
+        "enigmacamp.com/unit-test-starter-pack/model"
+        "enigmacamp.com/unit-test-starter-pack/utils/service"
         "github.com/gin-gonic/gin"
 )
+
+type AuthMiddleware interface {
+        RequireToken(roles ...string) gin.HandlerFunc
+}
+
+type authMiddleware struct {
+        jwtService service.JwtService
+}
 
 type authHeader struct {
         AuthorizationHeader string `header:"Authorization" binding:"required"`
 }
 
-func RequireToken(roles ...role.Roles) gin.HandlerFunc <span class="cov0" title="0">{
-        return func(c *gin.Context) </span><span class="cov0" title="0">{
+func (a *authMiddleware) RequireToken(roles ...string) gin.HandlerFunc <span class="cov0" title="0">{
+        return func(ctx *gin.Context) </span><span class="cov0" title="0">{
                 var aH authHeader
-                if err := c.ShouldBindHeader(&amp;aH); err != nil </span><span class="cov0" title="0">{
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized : " + err.Error()})
+                if err := ctx.ShouldBindHeader(&amp;aH); err != nil </span><span class="cov0" title="0">{
+                        ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
                         return
                 }</span>
+
                 <span class="cov0" title="0">token := strings.Replace(aH.AuthorizationHeader, "Bearer ", "", 1)
-                tokenClaim, err := jwtservice.VerifyToken(token)
+                tokenClaim, err := a.jwtService.VerifyToken(token)
                 if err != nil </span><span class="cov0" title="0">{
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized : " + err.Error()})
+                        ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
                         return
                 }</span>
-                <span class="cov0" title="0">c.Set("user", model.User{
-                        Id:   tokenClaim.ID,
-                        Role: tokenClaim.Role,
-                })
 
+                <span class="cov0" title="0">ctx.Set("user", model.UserCredential{Id: tokenClaim.ID, Role: tokenClaim.Role})
                 validRole := false
-
                 for _, role := range roles </span><span class="cov0" title="0">{
-                        if string(role) == tokenClaim.Role </span><span class="cov0" title="0">{
+                        if role == tokenClaim.Role </span><span class="cov0" title="0">{
                                 validRole = true
                                 break</span>
                         }
                 }
 
                 <span class="cov0" title="0">if !validRole </span><span class="cov0" title="0">{
-                        c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-                                "message": "Forbidden Resource"})
+                        ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "Forbidden Resource"})
+                        return
                 }</span>
-
-                <span class="cov0" title="0">c.Next()</span>
-
+                <span class="cov0" title="0">ctx.Next()</span>
         }
 }
+
+func NewAuthMiddleware(jwtService service.JwtService) AuthMiddleware <span class="cov0" title="0">{
+        return &amp;authMiddleware{jwtService: jwtService}
+}</span>
 </pre>
 		
 		<pre class="file" id="file5" style="display: none">package repository
@@ -336,239 +340,239 @@ func RequireToken(roles ...role.Roles) gin.HandlerFunc <span class="cov0" title=
 import (
         "database/sql"
         "fmt"
-        "funny-login/model"
+
+        "enigmacamp.com/unit-test-starter-pack/model"
 )
 
-type Request string
-
-const (
-        CreateRequest            Request = "CreateUser"
-        ListRequest              Request = "ListAllUsers"
-        GetRequest               Request = "GetUserById"
-        GetByNamePasswordRequest Request = "GetUserByNamePassword"
-)
-
-type Params struct {
-        Req      Request
-        User     model.User
-        Id       uint32
-        Name     string
-        Password string
+type UserRepository interface {
+        Create(user model.UserCredential) (model.UserCredential, error)
+        List() ([]model.UserCredential, error)
+        Get(id uint32) (model.UserCredential, error)
+        GetByUsernamePassword(username string, password string) (model.UserCredential, error)
 }
 
-type CRUD struct {
-        Create            model.User
-        List              []model.User
-        Get               model.User
-        GetByNamePassword model.User
+type userRepository struct {
+        db *sql.DB
 }
 
-func User(withParameter *Params) (*CRUD, error) <span class="cov8" title="1">{
-        var crud = CRUD{}
-        var err error
-        switch withParameter.Req </span>{
-        case CreateRequest:<span class="cov8" title="1">
-                crud.Create, err = create(withParameter.User)</span>
-        case ListRequest:<span class="cov8" title="1">
-                crud.List, err = list()</span>
-        case GetRequest:<span class="cov8" title="1">
-                crud.Get, err = get(withParameter.Id)</span>
-        case GetByNamePasswordRequest:<span class="cov0" title="0">
-                crud.GetByNamePassword, err = getByNamePassword(withParameter.Name, withParameter.Password)</span>
-        }
-        <span class="cov8" title="1">return &amp;crud, err</span>
-}
-
-var DB *sql.DB
-
-func CloseDB() <span class="cov0" title="0">{
-        err := DB.Close()
-        if err != nil </span><span class="cov0" title="0">{
-                fmt.Println("Failed to close DB : ", err.Error())
-        }</span>
-}
-
-func create(user model.User) (model.User, error) <span class="cov8" title="1">{
-        err := DB.QueryRow("INSERT INTO mst_user (username, password, role) VALUES  ($1, $2, $3) RETURNING id",
-                user.Name, user.Password, user.Role,
+func (u *userRepository) Create(user model.UserCredential) (model.UserCredential, error) <span class="cov8" title="1">{
+        err := u.db.QueryRow("INSERT INTO mst_user (username, password, role) VALUES  ($1, $2, $3) RETURNING id",
+                user.Username, user.Password, user.Role,
         ).Scan(&amp;user.Id)
         if err != nil </span><span class="cov8" title="1">{
-                return model.User{}, fmt.Errorf("failed to create user : " + err.Error())
+                return model.UserCredential{}, fmt.Errorf("failed to save user")
         }</span>
         <span class="cov8" title="1">return user, nil</span>
 }
 
-func list() ([]model.User, error) <span class="cov8" title="1">{
-        var users []model.User
-        rows, err := DB.Query("SELECT id, username, role FROM mst_user")
+func (u *userRepository) List() ([]model.UserCredential, error) <span class="cov8" title="1">{
+        var users []model.UserCredential
+        rows, err := u.db.Query("SELECT id, username, role FROM mst_user")
         if err != nil </span><span class="cov8" title="1">{
-                return []model.User{}, fmt.Errorf("failed to list user from database : " + err.Error())
+                return nil, fmt.Errorf("failed to retrieve list user")
         }</span>
         <span class="cov8" title="1">for rows.Next() </span><span class="cov8" title="1">{
-                var user model.User
-                err := rows.Scan(&amp;user.Id, &amp;user.Name, &amp;user.Role)
+                var user model.UserCredential
+                err := rows.Scan(&amp;user.Id, &amp;user.Username, &amp;user.Role)
                 if err != nil </span><span class="cov8" title="1">{
-                        return []model.User{}, fmt.Errorf("failure occured when scanning data : " + err.Error())
+                        return nil, fmt.Errorf("failed to scaning data")
                 }</span>
                 <span class="cov8" title="1">users = append(users, user)</span>
         }
         <span class="cov8" title="1">return users, nil</span>
 }
 
-func get(id uint32) (model.User, error) <span class="cov8" title="1">{
-        var user model.User
-        err := DB.QueryRow("SELECT id, username, role FROM mst_user WHERE id = $1", id).Scan(&amp;user.Id, &amp;user.Name, &amp;user.Role)
+func (u *userRepository) Get(id uint32) (model.UserCredential, error) <span class="cov8" title="1">{
+        var user model.UserCredential
+        err := u.db.QueryRow("SELECT id, username, role FROM mst_user WHERE id = $1", id).Scan(&amp;user.Id, &amp;user.Username, &amp;user.Role)
         if err != nil </span><span class="cov8" title="1">{
-                return model.User{}, fmt.Errorf("failed to get user by id : " + err.Error())
+                return model.UserCredential{}, fmt.Errorf("failed to get user by ID")
         }</span>
         <span class="cov8" title="1">return user, nil</span>
 }
 
-func getByNamePassword(name string, password string) (model.User, error) <span class="cov0" title="0">{
-        var user model.User
-        err := DB.QueryRow("SELECT id, username, role FROM mst_user WHERE username = $1 and password = $2", name, password).Scan(&amp;user.Id, &amp;user.Name, &amp;user.Role)
+func (u *userRepository) GetByUsernamePassword(username string, password string) (model.UserCredential, error) <span class="cov0" title="0">{
+        var user model.UserCredential
+        err := u.db.QueryRow("SELECT id, username, role FROM mst_user WHERE username = $1 and password = $2", username, password).Scan(&amp;user.Id, &amp;user.Username, &amp;user.Role)
         if err != nil </span><span class="cov0" title="0">{
-                return model.User{}, fmt.Errorf("failed to gert user by name and password : " + err.Error())
+                return model.UserCredential{}, fmt.Errorf("failed to get user by username and password")
         }</span>
         <span class="cov0" title="0">return user, nil</span>
 }
+
+func NewUserRepository(db *sql.DB) UserRepository <span class="cov8" title="1">{
+        return &amp;userRepository{db: db}
+}</span>
 </pre>
 		
 		<pre class="file" id="file6" style="display: none">package main
 
 import (
+        "database/sql"
         "fmt"
-        "funny-login/config"
-        "funny-login/controller"
-        "funny-login/repository"
-        jwtservice "funny-login/utils/jwt_service"
 
+        "enigmacamp.com/unit-test-starter-pack/middleware"
+        "enigmacamp.com/unit-test-starter-pack/utils/service"
+
+        "enigmacamp.com/unit-test-starter-pack/config"
+        "enigmacamp.com/unit-test-starter-pack/controller"
+        "enigmacamp.com/unit-test-starter-pack/repository"
+        "enigmacamp.com/unit-test-starter-pack/usecase"
         "github.com/gin-gonic/gin"
+        _ "github.com/lib/pq"
 )
 
-func StartServer() <span class="cov0" title="0">{
-        var engine *gin.Engine = gin.Default()
-        var conf config.Config
-        var err error
+type Server struct {
+        userUC     usecase.UserUseCase
+        authUc     usecase.AuthenticationUseCase
+        jwtService service.JwtService
+        engine     *gin.Engine
+        host       string
+}
 
-        repository.DB, err = conf.DB()
+func (s *Server) initRoute() <span class="cov0" title="0">{
+        rg := s.engine.Group("/api/v1")
+        authMiddleware := middleware.NewAuthMiddleware(s.jwtService)
+        controller.NewUserController(s.userUC, rg, authMiddleware).Route()
+        controller.NewAuthController(s.authUc, rg).Route()
+}</span>
+
+func (s *Server) Run() <span class="cov0" title="0">{
+        s.initRoute()
+        if err := s.engine.Run(s.host); err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("server not running on host %s, becauce error %v", s.host, err.Error()))</span>
+        }
+}
+
+func NewServer() *Server <span class="cov0" title="0">{
+        cfg, _ := config.NewConfig()
+        dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+                cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.Database)
+        db, err := sql.Open(cfg.Driver, dsn)
         if err != nil </span><span class="cov0" title="0">{
-                panic(fmt.Errorf("connection error : %v", err.Error()))</span>
+                panic("connection error")</span>
         }
-        <span class="cov0" title="0">defer repository.CloseDB()
-
-        jwtservice.Conf = *conf.Token()
-
-        rg := engine.Group("/api/v1")
-        var userController = controller.User{
-                RG: rg,
-        }
-        var authController = controller.Auth{
-                RG: rg,
-        }
-        userController.Route()
-        authController.Route()
-
-        host := conf.API()
-        err = engine.Run(host)
-
-        if err != nil </span><span class="cov0" title="0">{
-                panic(fmt.Errorf("server not running on host %s, because error %v", host, err.Error()))</span>
-        }
+        <span class="cov0" title="0">userRepo := repository.NewUserRepository(db)
+        userUseCase := usecase.NewUserUseCase(userRepo)
+        jwtService := service.NewJwtService(cfg.TokenConfig)
+        authUseCase := usecase.NewAuthenticationUseCase(userUseCase, jwtService)
+        engine := gin.Default()
+        host := fmt.Sprintf(":%s", cfg.ApiPort)
+        return &amp;Server{
+                userUC:     userUseCase,
+                authUc:     authUseCase,
+                jwtService: jwtService,
+                engine:     engine,
+                host:       host,
+        }</span>
 }
 </pre>
 		
 		<pre class="file" id="file7" style="display: none">package usecase
 
-import (
-        "fmt"
-        jwtservice "funny-login/utils/jwt_service"
-)
+import "enigmacamp.com/unit-test-starter-pack/utils/service"
 
-func Login(name string, password string) (string, error) <span class="cov0" title="0">{
-        user, err := GetUserByNamePassword(name, password)
+type AuthenticationUseCase interface {
+        Login(username string, password string) (string, error)
+}
+
+type authenticationUseCase struct {
+        userUseCase UserUseCase
+        jwtService  service.JwtService
+}
+
+func (a *authenticationUseCase) Login(username string, password string) (string, error) <span class="cov0" title="0">{
+        user, err := a.userUseCase.FindUserByUsernamePassword(username, password)
         var token string
         if err != nil </span><span class="cov0" title="0">{
                 return "", err
         }</span>
-
-        <span class="cov0" title="0">token, err = jwtservice.CreateToken(user)
+        <span class="cov0" title="0">token, err = a.jwtService.CreateToken(user)
         if err != nil </span><span class="cov0" title="0">{
-                return "", fmt.Errorf("failed creating token : " + err.Error())
+                return "", err
         }</span>
         <span class="cov0" title="0">return token, nil</span>
 }
+
+func NewAuthenticationUseCase(uc UserUseCase, jwtService service.JwtService) AuthenticationUseCase <span class="cov0" title="0">{
+        return &amp;authenticationUseCase{userUseCase: uc, jwtService: jwtService}
+}</span>
 </pre>
 		
 		<pre class="file" id="file8" style="display: none">package usecase
 
 import (
-        "funny-login/model"
-        "funny-login/repository"
+        "enigmacamp.com/unit-test-starter-pack/model"
+        "enigmacamp.com/unit-test-starter-pack/repository"
 )
 
-func CreateUser(user model.User) (model.User, error) <span class="cov8" title="1">{
-        params := &amp;repository.Params{
-                Req:  repository.CreateRequest,
-                User: user,
-        }
-        result, err := repository.User(params)
-        return result.Create, err
+type UserUseCase interface {
+        RegisterNewUser(payload model.UserCredential) (model.UserCredential, error)
+        FindAllUser() ([]model.UserCredential, error)
+        FindUserById(id uint32) (model.UserCredential, error)
+        FindUserByUsernamePassword(username string, password string) (model.UserCredential, error)
+}
+
+type userUseCase struct {
+        repo repository.UserRepository
+}
+
+func (u *userUseCase) RegisterNewUser(payload model.UserCredential) (model.UserCredential, error) <span class="cov0" title="0">{
+        return u.repo.Create(payload)
 }</span>
 
-func ListAllUsers() ([]model.User, error) <span class="cov0" title="0">{
-        params := &amp;repository.Params{
-                Req: repository.ListRequest,
-        }
-        result, err := repository.User(params)
-        return result.List, err
+func (u *userUseCase) FindAllUser() ([]model.UserCredential, error) <span class="cov0" title="0">{
+        return u.repo.List()
 }</span>
 
-func GetUserById(id uint32) (model.User, error) <span class="cov0" title="0">{
-        params := &amp;repository.Params{
-                Req: repository.GetRequest,
-                Id:  id,
-        }
-        result, err := repository.User(params)
-        return result.Get, err
-
+func (u *userUseCase) FindUserById(id uint32) (model.UserCredential, error) <span class="cov0" title="0">{
+        return u.repo.Get(id)
 }</span>
-func GetUserByNamePassword(name string, password string) (model.User, error) <span class="cov0" title="0">{
-        params := &amp;repository.Params{
-                Req:      repository.GetByNamePasswordRequest,
-                Name:     name,
-                Password: password,
-        }
-        result, err := repository.User(params)
-        return result.GetByNamePassword, err
+
+func (u *userUseCase) FindUserByUsernamePassword(username string, password string) (model.UserCredential, error) <span class="cov0" title="0">{
+        return u.repo.GetByUsernamePassword(username, password)
+}</span>
+
+func NewUserUseCase(repo repository.UserRepository) UserUseCase <span class="cov0" title="0">{
+        return &amp;userUseCase{repo: repo}
 }</span>
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package jwtservice
+		<pre class="file" id="file9" style="display: none">package service
 
 import (
         "fmt"
-        "funny-login/config"
-        "funny-login/model"
-        modelutil "funny-login/utils/model_util"
         "time"
 
+        "enigmacamp.com/unit-test-starter-pack/config"
+
+        "enigmacamp.com/unit-test-starter-pack/model"
+        modelutil "enigmacamp.com/unit-test-starter-pack/utils/model_util"
         "github.com/golang-jwt/jwt/v5"
 )
 
-var Conf config.TokenConfig
+type JwtService interface {
+        CreateToken(user model.UserCredential) (string, error)
+        VerifyToken(tokenString string) (modelutil.JwtPayloadClaim, error)
+}
 
-func CreateToken(user model.User) (string, error) <span class="cov0" title="0">{
-        signatureKey := Conf.JwtSignatureKey
+type jwtService struct {
+        cfg config.TokenConfig
+}
+
+func (j *jwtService) CreateToken(user model.UserCredential) (string, error) <span class="cov0" title="0">{
+        tokenKey := j.cfg.JwtSignatureKey
         claims := modelutil.JwtPayloadClaim{
                 RegisteredClaims: jwt.RegisteredClaims{
-                        Issuer:    Conf.ApplicationName,
-                        ExpiresAt: jwt.NewNumericDate(time.Now().Add(Conf.AccessTokenLifeTime)),
+                        Issuer:    j.cfg.ApplicationName,
+                        ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.cfg.AccessTokenLifeTime)),
                 },
                 UserId: user.Id,
                 Role:   user.Role,
         }
-        token, err := jwt.NewWithClaims(Conf.JwtSigningMethod, claims).SignedString(signatureKey)
+
+        jwtNewClaim := jwt.NewWithClaims(j.cfg.JwtSigningMethod, claims)
+        token, err := jwtNewClaim.SignedString(tokenKey)
         if err != nil </span><span class="cov0" title="0">{
                 return "", err
         }</span>
@@ -576,22 +580,26 @@ func CreateToken(user model.User) (string, error) <span class="cov0" title="0">{
         <span class="cov0" title="0">return token, nil</span>
 }
 
-func VerifyToken(token string) (modelutil.JwtPayloadClaim, error) <span class="cov0" title="0">{
-        tokenParse, err := jwt.ParseWithClaims(
-                token,
-                &amp;modelutil.JwtPayloadClaim{},
-                func(t *jwt.Token) (any, error) </span><span class="cov0" title="0">{
-                        return Conf.JwtSignatureKey, nil
-                }</span>)
+func (j *jwtService) VerifyToken(tokenString string) (modelutil.JwtPayloadClaim, error) <span class="cov0" title="0">{
+        tokenParse, err := jwt.ParseWithClaims(tokenString, &amp;modelutil.JwtPayloadClaim{}, func(t *jwt.Token) (interface{}, error) </span><span class="cov0" title="0">{
+                return j.cfg.JwtSignatureKey, nil
+        }</span>)
+
         <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
-                return modelutil.JwtPayloadClaim{}, fmt.Errorf("error token parsing : %s", err.Error())
+                return modelutil.JwtPayloadClaim{}, err
         }</span>
+
         <span class="cov0" title="0">claim, ok := tokenParse.Claims.(*modelutil.JwtPayloadClaim)
         if !ok </span><span class="cov0" title="0">{
                 return modelutil.JwtPayloadClaim{}, fmt.Errorf("error claim")
         }</span>
+
         <span class="cov0" title="0">return *claim, nil</span>
 }
+
+func NewJwtService(cfg config.TokenConfig) JwtService <span class="cov0" title="0">{
+        return &amp;jwtService{cfg: cfg}
+}</span>
 </pre>
 		
 		</div>

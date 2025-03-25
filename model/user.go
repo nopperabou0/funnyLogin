@@ -1,8 +1,8 @@
 package model
 
-type User struct {
+type UserCredential struct {
 	Id       string `json:"id"`
-	Name     string `json:"name"`
+	Username string `json:"username"`
 	Password string `json:"password,omitempty"`
 	Role     string `json:"role"`
 }

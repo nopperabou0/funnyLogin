@@ -1,52 +1,58 @@
 package middleware
 
 import (
-	"funny-login/model"
-	jwtservice "funny-login/utils/jwt_service"
-	role "funny-login/utils/role"
 	"net/http"
 	"strings"
 
+	"enigmacamp.com/unit-test-starter-pack/model"
+	"enigmacamp.com/unit-test-starter-pack/utils/service"
 	"github.com/gin-gonic/gin"
 )
+
+type AuthMiddleware interface {
+	RequireToken(roles ...string) gin.HandlerFunc
+}
+
+type authMiddleware struct {
+	jwtService service.JwtService
+}
 
 type authHeader struct {
 	AuthorizationHeader string `header:"Authorization" binding:"required"`
 }
 
-func RequireToken(roles ...role.Roles) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func (a *authMiddleware) RequireToken(roles ...string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 		var aH authHeader
-		if err := c.ShouldBindHeader(&aH); err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized : " + err.Error()})
+		if err := ctx.ShouldBindHeader(&aH); err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			return
 		}
+
 		token := strings.Replace(aH.AuthorizationHeader, "Bearer ", "", 1)
-		tokenClaim, err := jwtservice.VerifyToken(token)
+		tokenClaim, err := a.jwtService.VerifyToken(token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized : " + err.Error()})
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			return
 		}
-		c.Set("user", model.User{
-			Id:   tokenClaim.ID,
-			Role: tokenClaim.Role,
-		})
 
+		ctx.Set("user", model.UserCredential{Id: tokenClaim.ID, Role: tokenClaim.Role})
 		validRole := false
-
 		for _, role := range roles {
-			if string(role) == tokenClaim.Role {
+			if role == tokenClaim.Role {
 				validRole = true
 				break
 			}
 		}
 
 		if !validRole {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"message": "Forbidden Resource"})
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "Forbidden Resource"})
+			return
 		}
-
-		c.Next()
-
+		ctx.Next()
 	}
+}
+
+func NewAuthMiddleware(jwtService service.JwtService) AuthMiddleware {
+	return &authMiddleware{jwtService: jwtService}
 }
