@@ -59,7 +59,7 @@
 				
 				<option value="file1">enigmacamp.com/unit-test-starter-pack/controller/auth_controller.go (0.0%)</option>
 				
-				<option value="file2">enigmacamp.com/unit-test-starter-pack/controller/user_controller.go (0.0%)</option>
+				<option value="file2">enigmacamp.com/unit-test-starter-pack/controller/user_controller.go (48.1%)</option>
 				
 				<option value="file3">enigmacamp.com/unit-test-starter-pack/main.go (0.0%)</option>
 				
@@ -216,20 +216,20 @@ type UserController struct {
         authMiddleware middleware.AuthMiddleware
 }
 
-func (b *UserController) createUser(c *gin.Context) <span class="cov0" title="0">{
+func (b *UserController) createUser(c *gin.Context) <span class="cov8" title="1">{
         var payload model.UserCredential
-        if err := c.ShouldBindJSON(&amp;payload); err != nil </span><span class="cov0" title="0">{
+        if err := c.ShouldBindJSON(&amp;payload); err != nil </span><span class="cov8" title="1">{
                 c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
                 return
         }</span>
 
-        <span class="cov0" title="0">book, err := b.useCase.RegisterNewUser(payload)
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">book, err := b.useCase.RegisterNewUser(payload)
+        if err != nil </span><span class="cov8" title="1">{
                 c.JSON(http.StatusInternalServerError, gin.H{"err": "Failed to create user"})
                 return
         }</span>
 
-        <span class="cov0" title="0">c.JSON(http.StatusCreated, book)</span>
+        <span class="cov8" title="1">c.JSON(http.StatusCreated, book)</span>
 }
 
 func (b *UserController) getAllUser(c *gin.Context) <span class="cov0" title="0">{
@@ -257,13 +257,13 @@ func (b *UserController) getUserById(c *gin.Context) <span class="cov0" title="0
         <span class="cov0" title="0">c.JSON(http.StatusOK, book)</span>
 }
 
-func (b *UserController) Route() <span class="cov0" title="0">{
+func (b *UserController) Route() <span class="cov8" title="1">{
         b.rg.POST("/users", b.authMiddleware.RequireToken("admin"), b.createUser)
         b.rg.GET("/users", b.authMiddleware.RequireToken("admin"), b.getAllUser)
         b.rg.GET("/users/:id", b.authMiddleware.RequireToken("admin"), b.getUserById)
 }</span>
 
-func NewUserController(useCase usecase.UserUseCase, rg *gin.RouterGroup, am middleware.AuthMiddleware) *UserController <span class="cov0" title="0">{
+func NewUserController(useCase usecase.UserUseCase, rg *gin.RouterGroup, am middleware.AuthMiddleware) *UserController <span class="cov8" title="1">{
         return &amp;UserController{useCase: useCase, rg: rg, authMiddleware: am}
 }</span>
 </pre>

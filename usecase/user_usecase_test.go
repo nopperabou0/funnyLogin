@@ -105,6 +105,7 @@ func (suite *UserUseCaseTestSuite) TestList_Failed() {
 	assert.Error(suite.T(), err)
 	assert.Equal(suite.T(), []model.UserCredential{}, actualData)
 	suite.userRepoMock.AssertCalled(suite.T(), "List")
+	suite.userRepoMock.AssertExpectations(suite.T())
 }
 
 func (suite *UserUseCaseTestSuite) TestGet_Success() {
@@ -124,6 +125,7 @@ func (suite *UserUseCaseTestSuite) TestGet_Failed() {
 	assert.Error(suite.T(), err)
 	assert.Equal(suite.T(), model.UserCredential{}, actualData)
 	suite.userRepoMock.AssertCalled(suite.T(), "Get", uint32(2))
+
 }
 
 func TestUserUseCaseTestSuite(t *testing.T) {
