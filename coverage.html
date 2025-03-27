@@ -71,7 +71,7 @@
 				
 				<option value="file7">enigmacamp.com/unit-test-starter-pack/usecase/auth_usecase.go (0.0%)</option>
 				
-				<option value="file8">enigmacamp.com/unit-test-starter-pack/usecase/user_usecase.go (0.0%)</option>
+				<option value="file8">enigmacamp.com/unit-test-starter-pack/usecase/user_usecase.go (80.0%)</option>
 				
 				<option value="file9">enigmacamp.com/unit-test-starter-pack/utils/service/jwt_service.go (0.0%)</option>
 				
@@ -517,15 +517,15 @@ type userUseCase struct {
         repo repository.UserRepository
 }
 
-func (u *userUseCase) RegisterNewUser(payload model.UserCredential) (model.UserCredential, error) <span class="cov0" title="0">{
+func (u *userUseCase) RegisterNewUser(payload model.UserCredential) (model.UserCredential, error) <span class="cov8" title="1">{
         return u.repo.Create(payload)
 }</span>
 
-func (u *userUseCase) FindAllUser() ([]model.UserCredential, error) <span class="cov0" title="0">{
+func (u *userUseCase) FindAllUser() ([]model.UserCredential, error) <span class="cov8" title="1">{
         return u.repo.List()
 }</span>
 
-func (u *userUseCase) FindUserById(id uint32) (model.UserCredential, error) <span class="cov0" title="0">{
+func (u *userUseCase) FindUserById(id uint32) (model.UserCredential, error) <span class="cov8" title="1">{
         return u.repo.Get(id)
 }</span>
 
@@ -533,7 +533,7 @@ func (u *userUseCase) FindUserByUsernamePassword(username string, password strin
         return u.repo.GetByUsernamePassword(username, password)
 }</span>
 
-func NewUserUseCase(repo repository.UserRepository) UserUseCase <span class="cov0" title="0">{
+func NewUserUseCase(repo repository.UserRepository) UserUseCase <span class="cov8" title="1">{
         return &amp;userUseCase{repo: repo}
 }</span>
 </pre>

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"enigmacamp.com/unit-test-starter-pack/model"
@@ -52,6 +53,19 @@ var expectedUser = model.UserCredential{
 	Role:     "admin",
 }
 
+var expectedUsers = []model.UserCredential{
+	{
+		Id:       "1",
+		Username: "Maher",
+		Role:     "admin",
+	},
+	{
+		Id:       "2",
+		Username: "Fauzi",
+		Role:     "user",
+	},
+}
+
 func (suite *UserUseCaseTestSuite) TestCreate_Success() {
 	suite.userRepoMock.On("Create", expectedUser).Return(expectedUser, nil)
 	actualData, err := suite.userUseCase.RegisterNewUser(expectedUser)
@@ -71,6 +85,45 @@ func (suite *UserUseCaseTestSuite) TestCreate_Failed() {
 	assert.Error(suite.T(), err)
 	assert.Equal(suite.T(), model.UserCredential{}, actualData)
 	suite.userRepoMock.AssertCalled(suite.T(), "Create", model.UserCredential{})
+}
+
+func (suite *UserUseCaseTestSuite) TestList_Success() {
+	suite.userRepoMock.On("List").Return(expectedUsers, nil)
+	actualData, err := suite.userUseCase.FindAllUser()
+
+	assert.Nil(suite.T(), err)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), expectedUsers, actualData)
+	suite.userRepoMock.AssertCalled(suite.T(), "List")
+}
+
+func (suite *UserUseCaseTestSuite) TestList_Failed() {
+	suite.userRepoMock.On("List").Return([]model.UserCredential{}, fmt.Errorf("Failed to find all user\n"))
+	actualData, err := suite.userUseCase.FindAllUser()
+
+	assert.NotNil(suite.T(), err)
+	assert.Error(suite.T(), err)
+	assert.Equal(suite.T(), []model.UserCredential{}, actualData)
+	suite.userRepoMock.AssertCalled(suite.T(), "List")
+}
+
+func (suite *UserUseCaseTestSuite) TestGet_Success() {
+	id, _ := strconv.Atoi(expectedUser.Id)
+	suite.userRepoMock.On("Get", uint32(id)).Return(expectedUser, nil)
+	actualData, err := suite.userUseCase.FindUserById(uint32(id))
+	assert.Nil(suite.T(), err)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), expectedUser, actualData)
+	suite.userRepoMock.AssertCalled(suite.T(), "Get", uint32(id))
+}
+
+func (suite *UserUseCaseTestSuite) TestGet_Failed() {
+	suite.userRepoMock.On("Get", uint32(2)).Return(model.UserCredential{}, fmt.Errorf("Failed to find user by id"))
+	actualData, err := suite.userUseCase.FindUserById(uint32(2))
+	assert.NotNil(suite.T(), err)
+	assert.Error(suite.T(), err)
+	assert.Equal(suite.T(), model.UserCredential{}, actualData)
+	suite.userRepoMock.AssertCalled(suite.T(), "Get", uint32(2))
 }
 
 func TestUserUseCaseTestSuite(t *testing.T) {
